@@ -49,37 +49,30 @@ class HomeController extends Controller
         $references_by = ReferenceBy::all();
         $references_to = ReferenceTo::all();
 
-        // $actionsTaken = ActionTaken::all();
-        // $actions = ActionTaken::all();
-        // if (count($request->actionsTaken)>0){
-        //     $act = $request->actionsTaken;
-        // } else {
-        //     $act = $actions;
-        // }
         $request->flash();
         //dd($request);
 
-        // --------------- //
         // APPLY FILTERING //
         if ($request->filterStatus) {
             $statusSelected = $request->filterStatus;
 
             // ...set filters but dont get resuts yet, due to pagination and export conflict
-            //check user permissions
             $user = auth()->user();
             $IsUserOperator=$user->hasRole("operator") ;
             // dd($IsUserManager);
             if (!$IsUserOperator) {
                 $fakenews = Fakenews::ofStatus($statusSelected)->get();
                 $helpline = Helpline::ofStatus($statusSelected)->get();
-                // $helpline = Helpline::whereStatus($statusSelected)->get();
             }
             else {
                 if ($statusSelected!="*") {
-                    $helpline = Helpline::where('status', '=', $statusSelected)
-                        ->where(function ($query) {
-                            $query->where('user_assigned', Auth::id())
+                    $helpline = Helpline::where(function ($query) use ($statusSelected) {
+                        $query->select('*')
+                                ->where('status', '=', $statusSelected)
+                                ->where('user_assigned', Auth::id())
                                 ->orwhere('user_assigned', NULL)
+                                ->orwhere('user_opened', Auth::id())
+                                ->orwhere('user_opened', NULL)
                                 ->orwhere('forwarded', "true");
                         })->where(function($query) {
                              $query->where('user_opened', Auth::id())
@@ -124,12 +117,11 @@ class HomeController extends Controller
                 }
             }
         } else {
-            //check user permissions
+
             $user = auth()->user();
-            $IsUserOperator=$user->hasRole("operator") ;
-            // dd($IsUserManager);
-            if (!$IsUserOperator) {
-                // ...set filters but dont get resuts yet, due to pagination and export conflict
+            
+            // admin & manager can view everything.
+            if ($user->hasRole("admin") || $user->hasRole("manager")) {
                 $helpline = Helpline::ofStatus("*")->get();
                 $fakenews = Fakenews::ofStatus("*")->get();
             }

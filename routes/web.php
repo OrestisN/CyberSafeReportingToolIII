@@ -137,9 +137,9 @@ Route::group(['middleware' => ['web','auth']], function () {
     */
     Route::group(['middleware' => ['role:Manager']], function () {
         Route::get('/helpline/showManager', [ 'as' => 'show-helpline-manager', 'uses' => 'HelplineController@showManager']);
-        Route::get('/helpline/editManager', [ 'as' => 'edit-helpline-manager', 'uses' => 'HelplineController@editManager']);
+        Route::patch('/helpline/editManager', [ 'as' => 'edit-helpline-manager', 'uses' => 'HelplineController@editManager']);
         Route::get('/hotline/showManager', [ 'as' => 'hotline.show.manage', 'uses' => 'HotlineController@showManager']);
-        Route::get('/hotline/editManager', [ 'as' => 'edit-hotline-manager', 'uses' => 'HelplineController@editManager']);
+        Route::patch('/hotline/editManager', [ 'as' => 'edit-hotline-manager', 'uses' => 'HelplineController@editManager']);
     });
 
     Route::get('/hotline/changeFromHotline', [ 'as' => 'hotline.move-helpline', 'uses' => 'HotlineController@changeFromHotline']);
@@ -172,7 +172,7 @@ Route::group(['middleware' => ['web','auth']], function () {
     });
 
     Route::group(['middleware' => ['permission:view_hotline']], function () {
-        Route::get('/hotline/{hotline}','HotlineController@show')->name('hotline.show'); // invastigation form
+        Route::get('/hotline/{hotline}','HotlineController@show')->name('hotline.show'); // Investigation form
         Route::get('/hotline','HotlineController@index')->name('hotline'); // show all hotline
     });
 
@@ -200,11 +200,10 @@ Route::group(['middleware' => ['web','auth']], function () {
 
 
     /*
-    * Invastigation, this is used for both helpline and hotline.
-    * and now fakenews
+    * Investigation, this is used for both helpline and hotline.
     */
-    Route::group(['middleware' => ['permission:edit_hotline']], function () {
-        Route::get('/helpline/{helpline}/edit','HelplineController@edit')->name('edit-helpline'); // edit invastigation 
+    Route::group(['middleware' => ['permission:edit_helpline, edit_hotline']], function () {
+        Route::patch('/helpline/{helpline}/edit','HelplineController@edit')->name('edit-helpline'); // edit Investigation 
     });
 
     Route::group(['middleware' => ['permission:edit_fakenews']], function () {

@@ -198,7 +198,7 @@ Route::group(['middleware' => ['web','auth']], function () {
 
     Route::group(['middleware' => ['permission:view_fakenews']], function () {
         Route::get('/fakenews/{fakenews}','FakenewsController@show')->name('show.fakenews'); // invastigation form
-        Route::get('/fakenews','FakenewsController@index'); // show all helpline
+        Route::get('/fakenews','FakenewsController@index'); // show all fakenews
     });
 
 
@@ -211,7 +211,7 @@ Route::group(['middleware' => ['web','auth']], function () {
     * Invastigation, this is used for both helpline and hotline.
     * and now fakenews
     */
-    Route::group(['middleware' => ['permission:edit_helpline, edit_hotline,edit_fakenews']], function () {
+    Route::group(['middleware' => ['permission:edit_helpline, edit_hotline']], function () {
         Route::get('/helpline/{helpline}/edit','HelplineController@edit')->name('edit-helpline'); // edit invastigation 
     });
 

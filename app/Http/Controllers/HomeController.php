@@ -9,6 +9,11 @@ use App\ContentType;
 use App\Status;
 use App\ReferenceBy;
 use App\ReferenceTo;
+use App\Fakenews;
+use App\FakenewsType;
+use App\FakenewsPictures;
+use App\FakenewsPictureReff;
+use App\FakenewsSourceType;
 use App\User;
 // use App\ActionTaken;
 use Illuminate\Support\Facades\Crypt;
@@ -35,6 +40,9 @@ class HomeController extends Controller
     {
         $status = Status::all();
         $users = User::all();
+        //$fakenews = Fakenews::all();
+        $fakenewstype = FakenewsType::all();
+        $fakenewssourcetype = FakenewsSourceType::all();
         $resource_types = ResourceType::all();
         $content_types  = ContentType::all();
         $content_types  = ContentType::all();
@@ -49,6 +57,7 @@ class HomeController extends Controller
         //     $act = $actions;
         // }
         $request->flash();
+        //dd($request);
 
         // --------------- //
         // APPLY FILTERING //
@@ -61,6 +70,7 @@ class HomeController extends Controller
             $IsUserOperator=$user->hasRole("operator") ;
             // dd($IsUserManager);
             if (!$IsUserOperator) {
+                $fakenews = Fakenews::ofStatus($statusSelected)->get();
                 $helpline = Helpline::ofStatus($statusSelected)->get();
                 // $helpline = Helpline::whereStatus($statusSelected)->get();
             }
@@ -77,13 +87,35 @@ class HomeController extends Controller
                                 ->orwhere('forwarded', "true");
                         })
                         ->get();
+
+                    $fakenews = Fakenews::where('status', '=', $statusSelected)
+                        ->where(function ($query) {
+                            $query->where('user_assigned', Auth::id())
+                                ->orwhere('user_assigned', NULL)
+                                ->orwhere('forwarded', "true");
+                        })->where(function($query) {
+                             $query->where('user_opened', Auth::id())
+                                ->orwhere('user_opened',NULL)
+                                ->orwhere('forwarded', "true");
+                        })
+                        ->get();
                 }
                 else {
                     $helpline = Helpline::ofStatus("*")->where(function ($query) {
                             $query->where('user_assigned', Auth::id())
                                 ->orwhere('user_assigned', NULL)
                                 ->orwhere('forwarded', "true");
-                    })->where(function($query) {
+                        })->where(function($query) {
+                            $query->where('user_opened', Auth::id())
+                                ->orwhere('user_opened', NULL)
+                                ->orwhere('forwarded', "true");
+                        })
+                        ->get();
+                    $fakenews = Fakenews::ofStatus("*")->where(function ($query) {
+                            $query->where('user_assigned', Auth::id())
+                                ->orwhere('user_assigned', NULL)
+                                ->orwhere('forwarded', "true");
+                        })->where(function($query) {
                             $query->where('user_opened', Auth::id())
                                 ->orwhere('user_opened', NULL)
                                 ->orwhere('forwarded', "true");
@@ -99,24 +131,39 @@ class HomeController extends Controller
             if (!$IsUserOperator) {
                 // ...set filters but dont get resuts yet, due to pagination and export conflict
                 $helpline = Helpline::ofStatus("*")->get();
+                $fakenews = Fakenews::ofStatus("*")->get();
             }
             else {
                 $helpline = Helpline::where('status','!=','Closed')
-                ->where(function ($query) {
+                    ->where(function ($query) {
                     $query->where('user_assigned',Auth::id())
                         ->orwhere('user_assigned',NULL)
                         ->orwhere('forwarded', "true");
                         })->where(function($query) {
-                        $query->where('user_opened',Auth::id())
+                    $query->where('user_opened',Auth::id())
                         ->orwhere('user_opened',NULL)
                         ->orwhere('forwarded', "true");
                     })
-                ->get();
+                    ->get();
+                $fakenews = Fakenews::where('status','!=','Closed')
+                    ->where(function ($query) {
+                    $query->where('user_assigned',Auth::id())
+                        ->orwhere('user_assigned',NULL)
+                        ->orwhere('forwarded', "true");
+                        })->where(function($query) {
+                    $query->where('user_opened',Auth::id())
+                        ->orwhere('user_opened',NULL)
+                        ->orwhere('forwarded', "true");
+                    })
+                    ->get();
             }
         }
 
         return view('home')->with([
                     'helpline'=> $helpline,
+                    'fakenews'=> $fakenews,
+                    'fakenews_type' => $fakenewstype,
+                    'fakenews_source_type' => $fakenewssourcetype,
                     // 'hotline' => $hotline,
                     'resource_types' => $resource_types,
                     'content_types' => $content_types,
